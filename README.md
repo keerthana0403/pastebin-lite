@@ -1,40 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Pastebin Lite
 
-## Getting Started
+A lightweight Pastebin-like web application that allows users to create text pastes and share them via a unique URL. Pastes can optionally expire based on time (TTL) or number of views.
 
-First, run the development server:
+This project is designed to be serverless-friendly and safe for concurrent access.
+
+---
+
+## Features
+
+- Create a paste with arbitrary text
+- Share a unique URL to view the paste
+- Optional time-based expiry (TTL)
+- Optional view-count limit
+- Paste becomes unavailable once any constraint is triggered
+- Safe rendering (no script execution)
+
+---
+
+## Tech Stack
+
+- Next.js (Pages Router)
+- Node.js
+- Upstash Redis (persistence layer)
+- Vercel (deployment)
+
+---
+
+## Persistence Layer
+
+The application uses **Upstash Redis** as the persistence layer.
+
+Redis was chosen because:
+- It works well in serverless environments
+- It supports fast key-value access
+- It is suitable for TTL and view-count based expiry logic
+
+Each paste is stored with a key of the form:
+
+paste:<id>
+
+
+---
+
+## API Endpoints
+
+- `GET /api/healthz` – Health check
+- `POST /api/pastes` – Create a new paste
+- `GET /api/pastes/:id` – Fetch a paste (counts as a view)
+- `GET /p/:id` – View paste in HTML
+
+---
+
+## Running the App Locally
+
+### 1. Clone the repository
 
 ```bash
+git clone https://github.com/<your-username>/pastebin-lite.git
+cd pastebin-lite
+
+2. Install dependencies
+npm install
+
+3. Set environment variables
+
+Create a file named .env.local in the project root:
+
+UPSTASH_REDIS_REST_URL=your_upstash_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
+
+4. Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+The application will be available at:
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+http://localhost:3000
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+Design Decisions
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Server-side rendering (SSR) is used for viewing pastes to ensure correct behavior on reload.
 
-## Learn More
+Redis is used instead of in-memory storage to support serverless deployments.
 
-To learn more about Next.js, take a look at the following resources:
+View count logic ensures pastes are never served beyond their configured limits.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+Deterministic time handling is supported for automated testing.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+No global mutable state is used in server-side code.
 
-## Deploy on Vercel
+Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The application is deployed using Vercel with environment variables configured via the Vercel dashboard.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+Notes
+
+No secrets or credentials are committed to the repository.
+
+No hardcoded localhost URLs are present in the code.
+
+The project installs and runs using standard npm commands.
