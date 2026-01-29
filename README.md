@@ -56,7 +56,7 @@ paste:<id>
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/pastebin-lite.git
+git clone https://github.com/keerthana0403/pastebin-lite
 cd pastebin-lite
 
 2. Install dependencies
