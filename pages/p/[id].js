@@ -1,35 +1,26 @@
 import { useState, useEffect } from "react";
-import { redis } from "../../lib/redis";
 
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps({ req, params }) {
   const { id } = params;
 
-  // Fetch paste directly from Redis
-  const paste = await redis.get(`paste:${id}`);
+  const protocol = req.headers["x-forwarded-proto"] || "http";
+  const host = req.headers.host;
+  const baseUrl = `${protocol}://${host}`;
 
-  if (!paste) {
+  const res = await fetch(`${baseUrl}/api/pastes/${id}`);
+
+  if (!res.ok) {
     return { notFound: true };
   }
 
-  const now = Date.now();
-
-  // TTL check
-  if (paste.expires_at && now > paste.expires_at) {
-    await redis.del(`paste:${id}`);
-    return { notFound: true };
-  }
-
-  // Max views check (do NOT increment here)
-  if (paste.max_views !== null && paste.views >= paste.max_views) {
-    return { notFound: true };
-  }
+  const data = await res.json();
 
   return {
     props: {
-      id, // pass the paste ID to the client
-      content: paste.content,
-      remainingViews: paste.max_views !== null ? paste.max_views - paste.views : null,
-      expiresAt: paste.expires_at || null,
+      id,
+      content: data.content,
+      remainingViews: data.remaining_views,
+      expiresAt: data.expires_at,
     },
   };
 }
